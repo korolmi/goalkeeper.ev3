@@ -122,13 +122,15 @@ int GetBiDistance(void){
   }
   if ( res ) return res;
 
-  usleep(10000);
+  usleep(5000);
   
   if ( write(devFDs[NM_RIGHT_SENSOR_MODE], MODE_PING, 10) < 0) {
     res = DEV_ERR(NM_RIGHT_SENSOR_MODE);
   }
   if ( res ) return res;
 
+  //usleep(10000);
+  
   // считываем значения
   lseek(devFDs[NM_LEFT_SENSOR],0,SEEK_SET);
   if ( read(devFDs[NM_LEFT_SENSOR], buf, 10) < 0) {

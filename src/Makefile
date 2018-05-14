@@ -18,11 +18,11 @@ distmgr.o: distmgr.c params.h robot.h
 params.o: params.c params.h
 	$(GCC) -c params.c
 
-mathfuncs.o: mathfuncs.c mathfuncs.h
-	$(GCC) -c mathfuncs.c
+mathfunc.o: mathfunc.c mathfunc.h
+	$(GCC) -c mathfunc.c
 
-$(TARGET): robot.o params.o distmgr.o mathfuncs.o runner.c
-	$(GCC) -o $(TARGET) runner.c robot.o params.o mathfuncs.o distmgr.o
+$(TARGET): robot.o params.o distmgr.o mathfunc.o runner.c
+	$(GCC) -o $(TARGET) runner.c robot.o params.o mathfunc.o distmgr.o -lm
 
 install: $(TARGET)
 	scp $(TARGET) $(PREFIX)
