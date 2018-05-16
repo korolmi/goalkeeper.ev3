@@ -25,7 +25,7 @@ double calcLineIsec ( double x1, double y1, double x2, double y2 ){
 
 // возвращает точку пересечения мячиком оси Х (линии ворот)
 int calcIntersect( int base, int l1, int r1, int l2, int r2 ){
-	printf(" %d %d %d %d \n", l1, r1, l2, r2 );
+  // printf(" %d %d %d %d \n", l1, r1, l2, r2 );
 
 	double x1, y1, x2, y2, z;
 

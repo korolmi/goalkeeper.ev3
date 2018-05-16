@@ -23,6 +23,10 @@ static int      isInit;		// признак инициализации робот
 #define NM_RIGHT_MOTOR_COMMAND 	11
 #define NM_LEFT_MOTOR_SPEED 	12
 #define NM_RIGHT_MOTOR_SPEED 	13
+#define NM_LEFT_LED_GREEN 	14
+#define NM_LEFT_LED_RED 	15
+#define NM_RIGHT_LED_GREEN 	16
+#define NM_RIGHT_LED_RED 	17
 
 static char*	MODE_PING = "US-SI-CM"; // режим однократного измерения
 static char*	MODE_CONT = "US-DIST-CM"; // режим постоянного измерения
@@ -42,11 +46,17 @@ char * devFNames[] = {
   "w/sys/class/tacho-motor/motor1/speed_sp",
   "w/sys/class/tacho-motor/motor1/command",
   "r/sys/class/tacho-motor/motor0/speed",
-  "r/sys/class/tacho-motor/motor1/speed"
+  "r/sys/class/tacho-motor/motor1/speed",
+  "w/sys/class/leds/ev3:left:green:ev3dev/brightness",
+  "w/sys/class/leds/ev3:left:red:ev3dev/brightness",
+  "w/sys/class/leds/ev3:right:green:ev3dev/brightness",
+  "w/sys/class/leds/ev3:right:red:ev3dev/brightness"
 };
-#define NDEVS 14
+#define NDEVS 18	// пока не используем LEDs
 int devFDs[NDEVS];
 #define DEV_ERR(n)	(-1 * ( 1000 + n ))
+
+extern void SetLed(int nled, int green, int red);
   
 // инициализация робота - главным образом 
 // открытие всех необходимых файлов
@@ -68,6 +78,9 @@ int InitRobot(void){
     if ( devFDs[i]<0 )
       return DEV_ERR(i);
   }
+
+  SetLed( 0, 0, 0);
+  SetLed( 1, 0, 0);
   
   return 0;
 }
@@ -110,7 +123,10 @@ int GetDistance(int n_sensor){
 // получить расстояние (в нативных единицах) с пары сенсоров
 // при этом автоматом происходит переключение в режим пинга
 // возвращает левую дистанцию * 10000 + правую дистанцию
-int GetBiDistance(void){
+// в заголовочном файле есть макросы:
+//#define LEFT_DIST(d) (d/10000)
+//#define RIGHT_DIST(d) (d%10000)
+int GetBiDistance( int sleep ){
 
   char buf[10];
   int res, biDist;
@@ -122,7 +138,7 @@ int GetBiDistance(void){
   }
   if ( res ) return res;
 
-  usleep(5000);
+  usleep(sleep);
   
   if ( write(devFDs[NM_RIGHT_SENSOR_MODE], MODE_PING, 10) < 0) {
     res = DEV_ERR(NM_RIGHT_SENSOR_MODE);
@@ -218,10 +234,31 @@ void RunRobotTimed(int msecs, int speed){
     write(devFDs[NM_LEFT_MOTOR_COMMAND], "run-timed", 9);
     write(devFDs[NM_RIGHT_MOTOR_COMMAND], "run-timed", 9);
 
+    /*
     while (1) {
 	if (GetSpeed(0) != 0 && GetSpeed(1) != 0)
 	    break;
     }
+    */
+
+}
+
+// работа со светодиодами
+void SetLed(int nled, int green, int red){
+
+  char gbrt[4], rbrt[4];
+
+  sprintf(gbrt,"%d",green);
+  sprintf(rbrt,"%d",red);
+  
+  if ( nled ){ // правый
+    write(devFDs[NM_RIGHT_LED_GREEN],gbrt,strlen(gbrt));
+    write(devFDs[NM_RIGHT_LED_RED],rbrt,strlen(rbrt));
+  }
+  if ( nled==0 ){ // левый
+    write(devFDs[NM_LEFT_LED_GREEN],gbrt,strlen(gbrt));
+    write(devFDs[NM_LEFT_LED_RED],rbrt,strlen(rbrt));
+  }
 
 }
 
