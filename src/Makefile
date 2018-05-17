@@ -24,5 +24,8 @@ mathfunc.o: mathfunc.c mathfunc.h
 $(TARGET): robot.o params.o distmgr.o mathfunc.o runner.c
 	$(GCC) -o $(TARGET) runner.c robot.o params.o mathfunc.o distmgr.o -lm
 
-install: $(TARGET)
-	scp $(TARGET) $(PREFIX)
+simu: robot.c params.o distmgr.o mathfunc.o runner.c
+	$(GCC) -DSIMU -o simu runner.c robot.c params.o mathfunc.o distmgr.o -lm
+
+install: $(TARGET) simu
+	scp $(TARGET) simu $(PREFIX)

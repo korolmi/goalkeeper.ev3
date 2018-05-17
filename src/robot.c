@@ -35,8 +35,8 @@ static char*	MODE_CONT = "US-DIST-CM"; // режим постоянного из
 char * devFNames[] = {
   "w/sys/class/lego-sensor/sensor0/mode",
   "w/sys/class/lego-sensor/sensor1/mode",
-  "r/sys/class/lego-sensor/sensor0/value0",
   "r/sys/class/lego-sensor/sensor1/value0",
+  "r/sys/class/lego-sensor/sensor0/value0",
   "r/sys/class/tacho-motor/motor0/position_sp",
   "w/sys/class/tacho-motor/motor0/time_sp",
   "w/sys/class/tacho-motor/motor0/speed_sp",
@@ -120,6 +120,29 @@ int GetDistance(int n_sensor){
 
 }
 
+#ifdef SIMU
+static int nMgr;
+static int totMgr = 23;
+int rDist[] = {
+  1500, 1200, 900, 700, 500, 300,
+  2000, 1700, 1450, 1180, 917, 700, 485, 
+  2000, 1792, 1580, 1385, 1160, 974, 817, 655, 535, 0,
+  2500
+};
+int lDist[] = {
+  1500, 1200, 900, 700, 500, 300,
+  2010, 1695, 1455, 1190, 935, 730, 535,
+  2000, 1788, 1571, 1364, 1121, 925, 742, 552, 398, 0,
+  2500
+};
+static int simuNum = 0;
+static char* simuDescr[] = {
+  "Ball is going to hit me between my sensors",
+  "Ball is going to hit my right side",
+  "Ball is missing me on the left",
+  "There are no more simulations, restart the program to see them again"
+};
+#endif
 // получить расстояние (в нативных единицах) с пары сенсоров
 // при этом автоматом происходит переключение в режим пинга
 // возвращает левую дистанцию * 10000 + правую дистанцию
@@ -131,6 +154,13 @@ int GetBiDistance( int sleep ){
   char buf[10];
   int res, biDist;
 
+#ifdef SIMU
+  usleep(50*sleep);
+  res = lDist[nMgr]*10000+rDist[nMgr];
+  if ( nMgr!=totMgr ) nMgr++;
+  return res;
+#endif
+  
   // переключаем датчики в режим пинга
   res = 0;
   if ( write(devFDs[NM_LEFT_SENSOR_MODE], MODE_PING, 10) < 0) {
@@ -267,6 +297,12 @@ void communicate(char *phrase){
     char            buf[1000];
     buf[0] = 0;
 
+#ifdef SIMU
+    if ( phrase==NULL ){
+      phrase = simuDescr[simuNum++];
+    }
+#endif
+    
     strcat(buf, "./speak.sh ");
     strcat(buf, phrase);
     strcat(buf, " 2>/dev/null");

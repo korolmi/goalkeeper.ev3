@@ -6,9 +6,11 @@ double calcX ( int b, int l, int r ){
 
 	double deg;
 
-	deg = acos((double)(b*b + l*l - r*r)/(double)(2*b*l));
+	//deg = acos((double)(b*b + l*l - r*r)/(double)(2*b*l));
+	//return l * cos(deg);
 
-	return l * cos(deg);
+	return (double)(l*l + b*b - r*r)/(double)(2*b);
+	
 }
 
 // возвращает катет прямоугольного треугольника по его катету и гипотенузе 

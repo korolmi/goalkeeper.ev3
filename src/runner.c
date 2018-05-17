@@ -15,11 +15,11 @@ int decision(int result, int distance){
   }
   printf("in decision(med=%d,dist=%d)\n",medRes,distance);
   if (distance < get_param("близко")){
-    if ( medRes < 0 ){
+    if ( medRes<(SENSORS_DIST/2) && medRes >= -1*(SENSORS_DIST+10*get_param("мячик")) ){
       printf("MOVE RIGHT (average res is:  %d) \n",medRes);
       return 1;
     }
-    else{
+    if ( medRes>=(SENSORS_DIST/2) && medRes <= (2*SENSORS_DIST+10*get_param("мячик")) ){
       printf("MOVE LEFT (average res is:  %d) \n",medRes);
       return -1;
     }
@@ -32,17 +32,23 @@ void play(){
   
   int dist;
   int counter=0, missCounter=0;
-  int ld,rd,result,decis;
+  int ld,rd,result,decis=0;
 
   const int n=4;
   int i,mas[n];
   for (i=0; i<n; ++i)
     mas[i]=0;
 
-  medRes = 0;	// обнулим расчетную точку прилета мячика
+  medRes = SENSORS_DIST/2;	// обнулим расчетную точку прилета мячика
 
   while(1){
     dist = GetBiDistance(get_param("пауза"));
+    // printf("%d\n",dist);
+
+#ifdef SIMU
+    if ( dist==0 ) break;
+#endif
+
     if ( dist<0 ){  // ошибка - выдадим диагностику
       SetLed(1, 0, 255);
       printf("BIDIST error: %d\n", dist);
@@ -66,20 +72,20 @@ void play(){
 	  
 	if (mas[0]==mas[2] || mas[1]==mas[3]){ // отфильтровываем повторные значения - они не важны для работы
 	  counter=2;
-	  if (missCounter>10){ // скорее всего, мячик остановился
-	    medRes = 0;
-	    missCounter = 0;
-	    printf("RESET medRes\n");
-	    SetLed(0,0,0);
-	    usleep(10*get_param("пауза"));
-	  }
+	  //if (missCounter>10){ // скорее всего, мячик остановился
+	  //  medRes = SENSORS_DIST/2;
+	  //  missCounter = 0;
+	  //  printf("RESET medRes\n");
+	  //  SetLed(0,0,0);
+	  //  usleep(10*get_param("пауза"));
+	  //}
 	  missCounter++;
 	}
 	else{
 	  SetLed(0,255,255);
 	  result=calcIntersect(200, mas[0], mas[1], mas[2], mas[3]);
 	  printf("RESULT(%d,%d->%d,%d): %d \n", mas[0], mas[1], mas[2], mas[3], result);
-	  if ( (decis=decision(result, mas[0])) ){
+	  if ( (decis=decision(result, mas[3])) ){
 	    SetLed(0,0,255);
 	    break;
 	  }
@@ -90,7 +96,7 @@ void play(){
     }
     else{
       if (missCounter>100){ // скорее всего, мячик ушел из поля зрения
-	medRes = 0;
+	medRes = SENSORS_DIST/2;
 	missCounter = 0;
 	printf("RESET medRes (2)\n");
 	SetLed(0,0,0);
@@ -121,7 +127,14 @@ int main(int argc, char **argv){
   }
 
   while(1){
+    printf("ROUND STARTED=====================\n");
+#ifdef SIMU
+    communicate(NULL);
+#else
+    communicate("You can hit the ball now");
+#endif
     play();
+    printf("ROUND ENDED=======================\n");
     usleep(1000000*get_param("интервал"));
   }
   
